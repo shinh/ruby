@@ -96,6 +96,19 @@
 #include <fcntl.h>
 #endif
 
+#define USE_OBJFCN 1
+
+#if USE_OBJFCN
+
+#include "objfcn.c"
+
+#define dlopen(name,flag) objopen(name,flag)
+#define dlerror() objerror()
+#define dlsym(handle,name) objsym(handle,name)
+#define dlclose(handle) objclose(handle)
+
+#endif
+
 extern void rb_native_mutex_lock(rb_nativethread_lock_t *lock);
 extern void rb_native_mutex_unlock(rb_nativethread_lock_t *lock);
 extern void rb_native_mutex_initialize(rb_nativethread_lock_t *lock);
@@ -583,12 +596,20 @@ static const char *const CC_OPTIMIZE_ARGS[] = {MJIT_OPTFLAGS NULL};
 #define GCC_PIC_FLAGS /* empty */
 #endif
 
+#if USE_OBJFCN
+static const char *const CC_COMMON_ARGS[] = {
+    MJIT_CC_COMMON MJIT_CFLAGS "-fPIC",
+    NULL
+};
+#else
 static const char *const CC_COMMON_ARGS[] = {
     MJIT_CC_COMMON MJIT_CFLAGS GCC_PIC_FLAGS
     NULL
 };
+#endif
 
 static const char *const CC_LDSHARED_ARGS[] = {MJIT_LDSHARED GCC_PIC_FLAGS NULL};
+static const char *const CC_OBJ_ARGS[] = {"gcc", "-c", "-O3", "-fPIC", NULL};
 static const char *const CC_DLDFLAGS_ARGS[] = {
     MJIT_DLDFLAGS
 #if defined __GNUC__ && !defined __clang__
@@ -710,8 +731,12 @@ compile_c_to_so(const char *c_file, const char *so_file)
     files[2] = c_file;
     files[1] = so_file;
 #endif
+#if USE_OBJFCN
+    args = form_args(2, CC_OBJ_ARGS, files);
+#else
     args = form_args(5, CC_LDSHARED_ARGS, CC_CODEFLAG_ARGS,
                      files, CC_LIBS, CC_DLDFLAGS_ARGS);
+#endif
     if (args == NULL)
         return FALSE;
 
