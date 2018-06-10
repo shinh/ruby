@@ -100,7 +100,7 @@
 
 #if USE_OBJFCN
 
-#include "objfcn.c"
+#include "objfcn.h"
 
 #define dlopen(name,flag) objopen(name,flag)
 #define dlerror() objerror()

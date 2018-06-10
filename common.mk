@@ -105,6 +105,7 @@ COMMONOBJS    = array.$(OBJEXT) \
 		node.$(OBJEXT) \
 		numeric.$(OBJEXT) \
 		object.$(OBJEXT) \
+		objfcn.$(OBJEXT) \
 		pack.$(OBJEXT) \
 		parse.$(OBJEXT) \
 		proc.$(OBJEXT) \
